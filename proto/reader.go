@@ -87,6 +87,15 @@ func (r *Reader) UVarInt() (uint64, error) {
 	return n, nil
 }
 
+// VarInt reads int64 from internal reader.
+func (r *Reader) VarInt() (int64, error) {
+	n, err := binary.ReadVarint(r)
+	if err != nil {
+		return 0, errors.Wrap(err, "read")
+	}
+	return n, nil
+}
+
 func (r *Reader) StrLen() (int, error) {
 	n, err := r.Int()
 	if err != nil {
