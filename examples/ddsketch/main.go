@@ -15,7 +15,7 @@ func main() {
 		panic(err)
 	}
 
-	data := proto.NewAggregateFunctionDDSketch([]interface{}{0.01, 0.9}, proto.ColumnTypeUInt64)
+	data := proto.NewAggregateFunctionDD([]interface{}{0.01, 0.9}, proto.ColumnTypeUInt64)
 
 	if err := c.Do(ctx, ch.Query{
 		Body: "SELECT sketch FROM default.02919_ddsketch_quantile",

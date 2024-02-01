@@ -303,7 +303,7 @@ func (s *ColInfoInput) DecodeResult(r *Reader, version int, b Block) error {
 }
 
 const (
-	colType = "AggregateFunction"
+	colType = string(ColumnTypeAggregateFunction)
 	sep     = ", "
 )
 

@@ -18,7 +18,7 @@ import (
 	"io"
 )
 
-// An encoded DDSketch comprises multiple contiguous blocks (sequences of
+// An encoded DD comprises multiple contiguous blocks (sequences of
 // bytes). Each block is prefixed with a flag that indicates what the block
 // contains and how the data is encoded in the block.
 //

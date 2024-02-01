@@ -11,19 +11,19 @@ var (
 	ErrInvalidFlag = errors.New("invalid flag")
 )
 
-// DDSketch is a data structure that serves as a quantile sketch in which the
+// DD is a data structure that serves as a quantile sketch in which the
 // bins have a size that is proportional to the fractional rank error that they
 // incur. It is based on the following paper:
 // https://www.vldb.org/pvldb/vol12/p2195-masson.pdf
-type DDSketch struct {
+type DD struct {
 	Mapping        *IndexMapping
 	PositiveValues *Store
 	NegativeValues *Store
 	ZeroCount      float64
 }
 
-// Encode encodes DDSketch to buffer.
-func (d DDSketch) Encode(b *Buffer) {
+// Encode encodes DD to buffer.
+func (d DD) Encode(b *Buffer) {
 	if b == nil {
 		return
 	}
@@ -37,8 +37,8 @@ func (d DDSketch) Encode(b *Buffer) {
 	b.PutFloat64(d.ZeroCount)
 }
 
-// Decode decodes DDSketch from reader.
-func (d *DDSketch) Decode(r *Reader) error {
+// Decode decodes DD from reader.
+func (d *DD) Decode(r *Reader) error {
 	flag, err := r.Byte()
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (d *DDSketch) Decode(r *Reader) error {
 }
 
 // Debug returns debug string.
-func (d DDSketch) Debug() string {
+func (d DD) Debug() string {
 	var s string
 	s += "Mapping:\n"
 	s += d.Mapping.Debug()

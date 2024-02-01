@@ -5,35 +5,35 @@ import (
 	"strings"
 )
 
-// AggregateFunctionDDSketch implements Column interface.
-type AggregateFunctionDDSketch struct {
-	data []DDSketch
+// AggregateFunctionDD implements Column interface.
+type AggregateFunctionDD struct {
+	data []DD
 	args []interface{}
 	typ  ColumnType
 }
 
-// NewAggregateFunctionDDSketch returns new AggregateFunctionDDSketch.
-func NewAggregateFunctionDDSketch(args []interface{}, typ ColumnType) *AggregateFunctionDDSketch {
-	return &AggregateFunctionDDSketch{args: args, typ: typ}
+// NewAggregateFunctionDD returns new AggregateFunctionDD.
+func NewAggregateFunctionDD(args []interface{}, typ ColumnType) *AggregateFunctionDD {
+	return &AggregateFunctionDD{args: args, typ: typ}
 }
 
-// Append appends DDSketch to column.
-func (a *AggregateFunctionDDSketch) Append(v DDSketch) {
+// Append appends DD to column.
+func (a *AggregateFunctionDD) Append(v DD) {
 	a.data = append(a.data, v)
 }
 
-// AppendArr appends DDSketch array to column.
-func (a *AggregateFunctionDDSketch) AppendArr(v []DDSketch) {
+// AppendArr appends DD array to column.
+func (a *AggregateFunctionDD) AppendArr(v []DD) {
 	a.data = append(a.data, v...)
 }
 
-// Row returns DDSketch at index i.
-func (a AggregateFunctionDDSketch) Row(i int) DDSketch {
+// Row returns DD at index i.
+func (a AggregateFunctionDD) Row(i int) DD {
 	return a.data[i]
 }
 
 // Type returns ColumnTypeAggregateFunction.
-func (a AggregateFunctionDDSketch) Type() ColumnType {
+func (a AggregateFunctionDD) Type() ColumnType {
 	argsStr := make([]string, len(a.args))
 	for i, arg := range a.args {
 		argsStr[i] = fmt.Sprintf("%v", arg)
@@ -42,12 +42,12 @@ func (a AggregateFunctionDDSketch) Type() ColumnType {
 }
 
 // Rows returns number of rows in column.
-func (a AggregateFunctionDDSketch) Rows() int { return len(a.data) }
+func (a AggregateFunctionDD) Rows() int { return len(a.data) }
 
 // DecodeColumn decodes column from reader.
-func (a *AggregateFunctionDDSketch) DecodeColumn(r *Reader, rows int) error {
+func (a *AggregateFunctionDD) DecodeColumn(r *Reader, rows int) error {
 	for i := 0; i < rows; i++ {
-		var v DDSketch
+		var v DD
 		if err := v.Decode(r); err != nil {
 			return err
 		}
@@ -57,12 +57,12 @@ func (a *AggregateFunctionDDSketch) DecodeColumn(r *Reader, rows int) error {
 }
 
 // Reset resets column data.
-func (a *AggregateFunctionDDSketch) Reset() {
+func (a *AggregateFunctionDD) Reset() {
 	a.data = nil
 }
 
 // EncodeColumn encodes column to buffer.
-func (a AggregateFunctionDDSketch) EncodeColumn(b *Buffer) {
+func (a AggregateFunctionDD) EncodeColumn(b *Buffer) {
 	if b == nil {
 		return
 	}
@@ -72,7 +72,7 @@ func (a AggregateFunctionDDSketch) EncodeColumn(b *Buffer) {
 }
 
 // Debug returns string representation of column.
-func (a AggregateFunctionDDSketch) Debug() string {
+func (a AggregateFunctionDD) Debug() string {
 	var sketches = make([]string, len(a.data))
 	for _, sketch := range a.data {
 		sketches = append(sketches, sketch.Debug())
