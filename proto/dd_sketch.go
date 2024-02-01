@@ -11,6 +11,10 @@ var (
 	ErrInvalidFlag = errors.New("invalid flag")
 )
 
+// DDSketch is a data structure that serves as a quantile sketch in which the
+// bins have a size that is proportional to the fractional rank error that they
+// incur. It is based on the following paper:
+// https://www.vldb.org/pvldb/vol12/p2195-masson.pdf
 type DDSketch struct {
 	Mapping        *IndexMapping
 	PositiveValues *Store
@@ -18,6 +22,7 @@ type DDSketch struct {
 	ZeroCount      float64
 }
 
+// Encode encodes DDSketch to buffer.
 func (d DDSketch) Encode(b *Buffer) {
 	if b == nil {
 		return
@@ -32,6 +37,7 @@ func (d DDSketch) Encode(b *Buffer) {
 	b.PutFloat64(d.ZeroCount)
 }
 
+// Decode decodes DDSketch from reader.
 func (d *DDSketch) Decode(r *Reader) error {
 	flag, err := r.Byte()
 	if err != nil {
@@ -81,6 +87,7 @@ func (d *DDSketch) Decode(r *Reader) error {
 	return nil
 }
 
+// Debug returns debug string.
 func (d DDSketch) Debug() string {
 	var s string
 	s += "Mapping:\n"
@@ -94,12 +101,14 @@ func (d DDSketch) Debug() string {
 	return s
 }
 
+// IndexMapping is a mapping from a bin index to a value.
 type IndexMapping struct {
 	Gamma float64
 
 	IndexOffset float64
 }
 
+// Encode encodes IndexMapping to buffer.
 func (m IndexMapping) Encode(b *Buffer) {
 	if b == nil {
 		return
@@ -108,6 +117,7 @@ func (m IndexMapping) Encode(b *Buffer) {
 	b.PutFloat64(m.IndexOffset)
 }
 
+// Decode decodes IndexMapping from reader.
 func (m *IndexMapping) Decode(r *Reader) error {
 	gamma, err := r.Float64()
 	if err != nil {
@@ -122,6 +132,7 @@ func (m *IndexMapping) Decode(r *Reader) error {
 	return nil
 }
 
+// Debug returns debug string.
 func (m IndexMapping) Debug() string {
 	var s string
 	s += "Gamma: "
@@ -131,6 +142,7 @@ func (m IndexMapping) Debug() string {
 	return s
 }
 
+// Store is a store of bin counts.
 type Store struct {
 	BinCounts map[int32]float64
 
@@ -138,6 +150,7 @@ type Store struct {
 	ContiguousBinIndexOffset int32
 }
 
+// Encode encodes Store to buffer.
 func (s Store) Encode(b *Buffer) {
 	if b == nil {
 		return
@@ -160,6 +173,7 @@ func (s Store) Encode(b *Buffer) {
 	}
 }
 
+// Decode decodes Store from reader.
 func (s *Store) Decode(r *Reader) error {
 	encoding, err := r.Byte()
 	if err != nil {
@@ -208,6 +222,7 @@ func (s *Store) Decode(r *Reader) error {
 	return nil
 }
 
+// Debug returns debug string.
 func (store Store) Debug() string {
 	var s string
 	if len(store.ContiguousBinCounts) > 0 {

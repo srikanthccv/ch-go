@@ -102,6 +102,18 @@ func (c ColumnType) Conflicts(b ColumnType) bool {
 	if c.Base() != b.Base() {
 		return true
 	}
+	if c.Base() == b.Base() && c.Base() == ColumnTypeAggregateFunction {
+		// Compare function names.
+		aName, aType := aggregateFuncNameAndType(string(c))
+		bName, bType := aggregateFuncNameAndType(string(b))
+		if aName == bName {
+			return false
+		}
+		if aType == bType {
+			return false
+		}
+		return true
+	}
 	if c.normalizeCommas() == b.normalizeCommas() {
 		return false
 	}
@@ -174,45 +186,46 @@ func (c ColumnType) Array() ColumnType {
 //
 // For example: Array(Int8) or even Array(Array(String)).
 const (
-	ColumnTypeNone           ColumnType = ""
-	ColumnTypeInt8           ColumnType = "Int8"
-	ColumnTypeInt16          ColumnType = "Int16"
-	ColumnTypeInt32          ColumnType = "Int32"
-	ColumnTypeInt64          ColumnType = "Int64"
-	ColumnTypeInt128         ColumnType = "Int128"
-	ColumnTypeInt256         ColumnType = "Int256"
-	ColumnTypeUInt8          ColumnType = "UInt8"
-	ColumnTypeUInt16         ColumnType = "UInt16"
-	ColumnTypeUInt32         ColumnType = "UInt32"
-	ColumnTypeUInt64         ColumnType = "UInt64"
-	ColumnTypeUInt128        ColumnType = "UInt128"
-	ColumnTypeUInt256        ColumnType = "UInt256"
-	ColumnTypeFloat32        ColumnType = "Float32"
-	ColumnTypeFloat64        ColumnType = "Float64"
-	ColumnTypeString         ColumnType = "String"
-	ColumnTypeFixedString    ColumnType = "FixedString"
-	ColumnTypeArray          ColumnType = "Array"
-	ColumnTypeIPv4           ColumnType = "IPv4"
-	ColumnTypeIPv6           ColumnType = "IPv6"
-	ColumnTypeDateTime       ColumnType = "DateTime"
-	ColumnTypeDateTime64     ColumnType = "DateTime64"
-	ColumnTypeDate           ColumnType = "Date"
-	ColumnTypeDate32         ColumnType = "Date32"
-	ColumnTypeUUID           ColumnType = "UUID"
-	ColumnTypeEnum8          ColumnType = "Enum8"
-	ColumnTypeEnum16         ColumnType = "Enum16"
-	ColumnTypeLowCardinality ColumnType = "LowCardinality"
-	ColumnTypeMap            ColumnType = "Map"
-	ColumnTypeBool           ColumnType = "Bool"
-	ColumnTypeTuple          ColumnType = "Tuple"
-	ColumnTypeNullable       ColumnType = "Nullable"
-	ColumnTypeDecimal32      ColumnType = "Decimal32"
-	ColumnTypeDecimal64      ColumnType = "Decimal64"
-	ColumnTypeDecimal128     ColumnType = "Decimal128"
-	ColumnTypeDecimal256     ColumnType = "Decimal256"
-	ColumnTypePoint          ColumnType = "Point"
-	ColumnTypeInterval       ColumnType = "Interval"
-	ColumnTypeNothing        ColumnType = "Nothing"
+	ColumnTypeNone              ColumnType = ""
+	ColumnTypeInt8              ColumnType = "Int8"
+	ColumnTypeInt16             ColumnType = "Int16"
+	ColumnTypeInt32             ColumnType = "Int32"
+	ColumnTypeInt64             ColumnType = "Int64"
+	ColumnTypeInt128            ColumnType = "Int128"
+	ColumnTypeInt256            ColumnType = "Int256"
+	ColumnTypeUInt8             ColumnType = "UInt8"
+	ColumnTypeUInt16            ColumnType = "UInt16"
+	ColumnTypeUInt32            ColumnType = "UInt32"
+	ColumnTypeUInt64            ColumnType = "UInt64"
+	ColumnTypeUInt128           ColumnType = "UInt128"
+	ColumnTypeUInt256           ColumnType = "UInt256"
+	ColumnTypeFloat32           ColumnType = "Float32"
+	ColumnTypeFloat64           ColumnType = "Float64"
+	ColumnTypeString            ColumnType = "String"
+	ColumnTypeFixedString       ColumnType = "FixedString"
+	ColumnTypeArray             ColumnType = "Array"
+	ColumnTypeIPv4              ColumnType = "IPv4"
+	ColumnTypeIPv6              ColumnType = "IPv6"
+	ColumnTypeDateTime          ColumnType = "DateTime"
+	ColumnTypeDateTime64        ColumnType = "DateTime64"
+	ColumnTypeDate              ColumnType = "Date"
+	ColumnTypeDate32            ColumnType = "Date32"
+	ColumnTypeUUID              ColumnType = "UUID"
+	ColumnTypeEnum8             ColumnType = "Enum8"
+	ColumnTypeEnum16            ColumnType = "Enum16"
+	ColumnTypeLowCardinality    ColumnType = "LowCardinality"
+	ColumnTypeMap               ColumnType = "Map"
+	ColumnTypeBool              ColumnType = "Bool"
+	ColumnTypeTuple             ColumnType = "Tuple"
+	ColumnTypeNullable          ColumnType = "Nullable"
+	ColumnTypeDecimal32         ColumnType = "Decimal32"
+	ColumnTypeDecimal64         ColumnType = "Decimal64"
+	ColumnTypeDecimal128        ColumnType = "Decimal128"
+	ColumnTypeDecimal256        ColumnType = "Decimal256"
+	ColumnTypePoint             ColumnType = "Point"
+	ColumnTypeInterval          ColumnType = "Interval"
+	ColumnTypeNothing           ColumnType = "Nothing"
+	ColumnTypeAggregateFunction ColumnType = "AggregateFunction"
 )
 
 // colWrap wraps Column with type t.
@@ -287,4 +300,39 @@ func (s *ColInfoInput) DecodeResult(r *Reader, version int, b Block) error {
 		})
 	}
 	return nil
+}
+
+const (
+	colType = "AggregateFunction"
+	sep     = ", "
+)
+
+func aggregateFuncNameAndType(columnType string) (string, string) {
+
+	subType := columnSubType(columnType)
+
+	if subType == "" {
+		return "", ""
+	}
+
+	idx := strings.LastIndex(subType, sep)
+	if idx == -1 {
+		return "", ""
+	}
+
+	funcName := subType[:idx]
+	funcType := subType[idx+len(sep):]
+
+	if idx := strings.IndexByte(funcName, '('); idx >= 0 {
+		funcName = funcName[:idx]
+	}
+
+	return funcName, funcType
+}
+
+func columnSubType(s string) string {
+	if strings.HasPrefix(s, colType) && strings.HasSuffix(s, ")") {
+		return s[len(colType)+1 : len(s)-1]
+	}
+	return ""
 }
